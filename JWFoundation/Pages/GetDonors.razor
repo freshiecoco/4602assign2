@@ -1,0 +1,63 @@
+@page "/donors"
+@attribute [Authorize(Roles = "Admin")]
+@inject DonorService donorService
+
+<div class="container"> 
+<div class="text-center d-flex align-items-center">
+  <h1 class="my-3">Donors</h1>
+  <a class="btn btn-light mx-3" href="/adddonor">
+  <span class="oi oi-plus m-2"></span>
+  <strong>More</strong>
+  </a>
+</div>
+
+@if (donors == null)
+{
+  <p><em>Loading...</em></p>
+}
+else
+{
+ <table class='table table-striped'>
+  <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Address</th>
+      <th>Tools</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in donors)
+    {
+      <tr class="bg-light">
+        <td>@item.AccountNo</td>
+        <td>@item.FirstName @item.LastName</td>
+        <td>@item.Email</td>
+        <td>
+          <span>@item.Street</span><br>
+          <span>@item.City, <strong>@item.PostalCode</strong></span><br>
+          <span>@item.Country</span>
+        </td>
+        <td>
+          <a class="btn btn-dark btn-sm" href="/updel/@item.AccountNo/edit">Edit</a>
+          <a class="btn btn-light btn-sm mx-2" href="/updel/@item.AccountNo/del">Remove</a>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+}
+</div>
+
+
+
+@code {
+  List<Donor>? donors;
+
+  protected override async Task OnInitializedAsync()
+  {
+    donors = await donorService.GetDonorsAsync();
+  }
+}

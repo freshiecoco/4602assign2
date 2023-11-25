@@ -1,0 +1,39 @@
+@page "/addpayment"
+@attribute [Authorize(Roles = "Admin")]
+@inject PaymentService paymentService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<PageTitle>Add Payment Method</PageTitle>
+
+<div class="container">
+<h1>New Payment Method</h1>
+
+<EditForm Model="@payment" OnValidSubmit="HandleValidSubmit">
+  <DataAnnotationsValidator />
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => payment.Name)" />
+    <label for="Name">Name:</label>
+    <InputText id="Name" class="form-control" @bind-Value="payment.Name" />
+  </div>
+
+  <button type="submit" class="btn btn-dark my-5">Submit</button>
+</EditForm>
+</div>
+@code {
+  private PaymentMethod payment = new PaymentMethod();
+
+  private async Task HandleValidSubmit() {
+    var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var user = authenticationState.User;
+    var username = user.Identity?.Name;
+
+    payment!.CreatedBy = username?.ToString() ?? "Unknown";
+    payment!.Created = DateTime.Now;
+    await paymentService.InsertPaymentMethodAsync(payment);
+
+    NavManager.NavigateTo("/payments");
+  }
+}

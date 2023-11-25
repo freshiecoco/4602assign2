@@ -1,0 +1,50 @@
+@page "/transactions"
+@attribute [Authorize(Roles = "Admin")]
+@inject TransactionService transactionService
+
+<div class="container"> 
+<div class="text-center d-flex align-items-center">
+  <h1 class="my-3">Transaction Types</h1>
+  <a class="btn btn-light mx-3" href="/addtransaction">
+  <span class="oi oi-plus m-2"></span>
+  <strong>More</strong>
+  </a>
+</div>
+
+@if (transactionTypes == null) {
+  <p><em>Loading...</em></p>
+} else {
+  <table class='table table-striped'>
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Tools</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var item in transactionTypes)
+      {
+        <tr class="bg-light">
+          <td>@item.TransactionTypeId</td>
+          <td>@item.Name</td>
+          <td>@item.Description</td>
+          <td><a class="btn btn-dark btn-sm" href="/updelTransaction/@item.TransactionTypeId/edit">Edit</a>
+              <a class="btn btn-light btn-sm mx-3" href="/updelTransaction/@item.TransactionTypeId/del">Remove</a
+          </td>
+        </tr>
+        }
+    </tbody>
+  </table>
+}
+
+</div>
+@code {
+  List<TransactionType>? transactionTypes;
+
+  protected override async Task OnInitializedAsync() {
+    transactionTypes = await transactionService.GetTransactionTypesAsync();
+  }
+
+}

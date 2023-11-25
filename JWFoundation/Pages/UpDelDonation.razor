@@ -1,0 +1,161 @@
+@page "/updelDonation/{id}/{mode}"
+@attribute [Authorize(Roles = "Admin, Finance")]
+@inject DonorService donorService
+@inject PaymentService paymentService
+@inject TransactionService transactionService
+@inject DonationService donationService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Update/Delete Donation</PageTitle>
+
+<div class="container">
+@if (tempDonation !=null && donation!= null && Mode == "edit") {
+
+<div class="m-5 bg-light">
+    <small>Originally created on: <strong>@donation.Created.ToString("ddd, MMMM d, yyyy - h:mm tt")</strong> 
+        by : <strong>@donation.CreatedBy</strong> 
+    </small>
+</div>
+@if (donation.ModifiedBy != null)
+{
+    <div>
+    <small>Modified on: @donation.Modified.ToString("ddd, MMMM d, yyyy - h:mm tt")
+        by: <strong>@donation.ModifiedBy</strong> 
+    </small>
+    </div>
+}
+var donor = donorService.GetDonorByIdAsync(donation.AccountNo).Result;
+var transactionType = transactionService.GetTransactionTypeByIdAsync(donation.TransactionTypeId).Result;
+var paymentMethod = paymentService.GetPaymentMethodByIdAsync(donation.PaymentMethodId).Result;
+
+var donors = donorService.GetDonorsAsync().Result;
+var transactionTypes = transactionService.GetTransactionTypesAsync().Result;
+var paymentMethods = paymentService.GetPaymentMethodsAsync().Result;    
+
+<div>
+    <h2>Edit Information of Donation no. @Id</h2>
+    <EditForm Model="@tempDonation" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempDonation.AccountNo)" />
+            <label for="Date">Date:</label>
+            <InputDate id="Date" class="form-control text-muted" @bind-Value="tempDonation.Date" />
+        </div>
+        @if(donor !=null) {
+        <div class="form-group py-2">
+            <label for="Donor">Donor:</label>
+            <InputSelect id="Donor" class="form-control text-muted bg-light" @bind-Value="tempDonation.AccountNo">
+                @foreach (var item in donors)
+                {
+                    <option value="@item.AccountNo">@item.AccountNo) @item.FirstName @item.LastName</option>
+                }
+            </InputSelect>
+        </div>
+        }
+
+        @if(transactionType !=null) {
+        <div class="form-group py-2">
+            <label for="TransactionType">Transaction Type:</label>
+            <InputSelect id="TransactionType" class="form-control text-muted" @bind-Value="tempDonation.TransactionTypeId">
+                @foreach (var item in transactionTypes)
+                {
+                    <option value="@item.TransactionTypeId">@item.TransactionTypeId) @item.Name</option>
+                }
+            </InputSelect>
+        </div>
+        }
+
+        @if(paymentMethod !=null) {
+        <div class="form-group py-2">
+            <label for="PaymentMethod">Payment Method:</label>
+            <InputSelect id="PaymentMethod" class="form-control text-muted" @bind-Value="tempDonation.PaymentMethodId">
+                @foreach (var item in paymentMethods)
+                {
+                    <option value="@item.PaymentMethodId">@item.PaymentMethodId) @item.Name</option>
+                }
+            </InputSelect>
+        </div>
+        }
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempDonation.Amount)" />
+            <label for="Amount">Amount:</label>
+            <InputNumber id="Amount" class="form-control text-muted" @bind-Value="tempDonation.Amount" />
+        </div>
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempDonation.Notes)" />
+            <label for="Notes">Notes:</label>
+            <InputText id="Notes" class="form-control text-muted" @bind-Value="tempDonation.Notes" />
+        </div>
+        <div class="py-2">
+            <button type="submit" class="btn btn-dark">Update</button>
+        </div>
+    </EditForm>
+
+    @code {
+        private async Task HandleValidSubmit()
+        {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authenticationState.User;
+            var username = user.Identity?.Name;
+
+            donation!.Date = tempDonation!.Date;
+            donation!.AccountNo = tempDonation!.AccountNo;
+            donation!.TransactionTypeId = tempDonation!.TransactionTypeId;
+            donation!.PaymentMethodId = tempDonation!.PaymentMethodId;
+            donation!.Amount = tempDonation!.Amount;
+            donation!.Notes = tempDonation!.Notes;
+
+            donation!.ModifiedBy = username?.ToString() ?? "Unknown";
+            await donationService.UpdateDonationAsync(donation!.AccountNo, donation);
+            NavManager.NavigateTo("/donations");
+        }
+    }
+</div>
+}
+else if (donation != null && Mode == "del")
+{ // Delete
+    <fieldset>
+        <legend>Donation Information</legend>
+    </fieldset>
+    <p>Donation with ID: @Id will be deleted</p>
+    <p>Are you sure?</p>
+    <button type="button" class="btn btn-danger" @onclick="HandleDeleteDonation">Delete</button>
+    @code {
+    private async Task HandleDeleteDonation()
+    {
+        await donationService.DeleteDonationAsync(donation!.AccountNo);
+        NavManager.NavigateTo("/donations");
+    }
+}
+}
+else
+{
+    <p>Donation with ID == @Id not found</p>
+}
+</div>
+@code {
+    private Donation? donation = new Donation();
+    private Donation? tempDonation;
+
+    [Parameter]
+    public string? Id { get; set; }
+    [Parameter]
+    public string? Mode { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        int intId = Convert.ToInt32(Id);
+        donation = await donationService.GetDonationByIdAsync(intId);
+        tempDonation = new Donation
+        {
+            AccountNo = donation!.AccountNo,
+            Date = donation!.Date,
+            TransactionTypeId = donation!.TransactionTypeId,
+            PaymentMethodId = donation!.PaymentMethodId,
+            Amount = donation!.Amount,
+            Notes = donation!.Notes
+        };
+    }
+}

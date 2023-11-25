@@ -1,0 +1,86 @@
+﻿<div class="top-row ps-2 navbar navbar-light" style="background-color: #d0d4d9;">
+    <div class="container-fluid">
+        <img src="images/logo.png" alt="Logo" width="50" height="50" />
+        <a class="navbar-brand" href="">JW Foundation</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="d-flex">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <AuthorizeView Roles="Admin">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reports">
+                <span class="oi oi-vertical-align-bottom" aria-hidden="true"></span> Reports
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="receipts">
+                <span class="oi oi-file" aria-hidden="true"></span> Receipts
+            </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin, Finance">
+    <ChildContent Context="outerContext">
+        <div class="nav-item dropdown px-3"
+             @onmouseenter="OpenDropdown"
+             @onmouseleave="CloseDropdown">
+
+            <div class="d-flex align-items-center justify-content-center py-3 text-white">
+                <span class="oi oi-cog" aria-hidden="true"></span>
+                <div>Management</div>
+            </div>
+
+            <div class="dropdown-menu menu-list" aria-labelledby="management" style="display: @(isDropdownOpen ? "block" : "none")">
+                <!-- Inner content specifically for Admin -->
+                <AuthorizeView Roles="Admin">
+                    <ChildContent Context="innerContextAdmin">
+                        <NavLink class="dropdown-item" href="donors">Donors</NavLink>
+                        <NavLink class="dropdown-item" href="payments">Payment Methods</NavLink>
+                        <NavLink class="dropdown-item" href="transactions">Transaction Types</NavLink>
+                    </ChildContent>
+                </AuthorizeView>
+
+                <!-- Common dropdown items for both Admin and Finance -->
+                <NavLink class="dropdown-item" href="donations">Donations</NavLink>
+            </div>
+        </div>
+    </ChildContent>
+</AuthorizeView>
+
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private bool isDropdownOpen = false;
+
+    private void OpenDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+    }
+
+    private void CloseDropdown()
+    {
+        isDropdownOpen = false;
+    }
+
+}

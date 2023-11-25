@@ -1,0 +1,70 @@
+@page "/report/{year:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject DonationService donationService
+@inject DonorService donorService
+
+@if(donations!= null) {
+
+<div class="container">
+    <h1>Donation report for @year</h1>   
+    <div class="row">
+        <div class="col-md-9">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Donor</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Your existing loop through donations -->
+                    @foreach (var donation in donations)
+                    {
+                        var donor = donorService.GetDonorByIdAsync(donation.AccountNo).Result;
+
+                        <tr>
+                            <td>@donation.Date.ToString("MMMM dd, yyyy")</td>
+                            <td>
+                                @if (donor != null)
+                                {
+                                    <strong>@donor.FirstName @donor.LastName</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">Donor not found for AccountNo: @donation.AccountNo</span>
+                                }
+                            </td>
+                            <td class="text-end">@donation.Amount.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Summary -->
+            <div class="mt-4">
+                <h5>Number of donors: @totalDonors</h5>
+                <hr/>
+                <h3>Total Amount: <strong>@annualTotalAmount.ToString("C")</strong></h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+ }
+
+ @code {
+    List<Donation>? donations;
+    private float annualTotalAmount;
+    private int totalDonors;
+
+    [Parameter]
+    public int year { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        donations = await donationService.GetAnnualDonationAsync(year);
+        annualTotalAmount = (float)donations.Sum(d => d.Amount);
+        totalDonors = donations.Count();
+    }
+  }

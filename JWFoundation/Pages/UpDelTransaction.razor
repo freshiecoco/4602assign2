@@ -1,0 +1,107 @@
+@page "/updelTransaction/{id}/{mode}"
+@attribute [Authorize(Roles = "Admin")]
+@inject TransactionService transactionService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Update/Delete Transaction</PageTitle>
+
+<div class="container">
+
+@if (tempTransaction!= null && transaction !=null && Mode == "edit") {
+
+<div class="m-5 bg-light">
+    <small>Originally created on: <strong>@transaction.Created.ToString("ddd, MMMM d, yyyy - h:mm tt")</strong> 
+        by : <strong>@transaction.CreatedBy</strong> 
+    </small>
+</div>
+@if (transaction.ModifiedBy != null)
+{
+    <div>
+    <small>Modified on: @transaction.Modified.ToString("ddd, MMMM d, yyyy - h:mm tt")
+        by: <strong>@transaction.ModifiedBy</strong> 
+    </small>
+    </div>
+}
+<div>
+    <h2>Edit Information of Transaction no. @Id</h2>
+    <EditForm Model="@tempTransaction" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempTransaction.Name)" />
+            <label for="Name">Name:</label>
+            <InputText id="Name" class="form-control text-muted" @bind-Value="tempTransaction.Name" />
+        </div>
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempTransaction.Description)" />
+            <label for="Description">Description:</label>
+            <InputText id="Description" class="form-control text-muted" @bind-Value="tempTransaction.Description" />
+        </div>
+        <div class="py-2">
+            <button type="submit" class="btn btn-dark">Update</button>
+        </div>
+    </EditForm>
+
+    @code {
+        private async Task HandleValidSubmit()
+        {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authenticationState.User;
+            var username = user.Identity?.Name;
+
+            transaction!.Name = tempTransaction!.Name;
+            transaction!.Description = tempTransaction!.Description;
+
+            transaction!.ModifiedBy = username?.ToString() ?? "Unknown";
+            await transactionService.UpdateTransactionTypeAsync(transaction!.TransactionTypeId, transaction);
+            NavManager.NavigateTo("/transactions");
+        }
+    }
+</div>
+}
+else if (transaction != null && Mode == "del")
+{ // Delete
+  
+    <fieldset>
+        <legend>Transaction Information</legend>
+        <p>Type: @transaction.Name</p>
+    </fieldset>
+    <p>Transaction with ID: @Id will be deleted</p>
+    <p>Are you sure?</p>
+    <button type="button" class="btn btn-danger" @onclick="HandleDeleteTransaction">Delete</button>
+    @code {
+    private async Task HandleDeleteTransaction()
+    {
+        await transactionService.DeleteTransactionTypeAsync(transaction!.TransactionTypeId);
+        NavManager.NavigateTo("/transactions");
+    }
+}
+}
+else
+{
+    <p>Transaction with ID: @Id not found</p>
+}
+
+</div>
+
+@code {
+    private TransactionType? transaction = new TransactionType();
+    private TransactionType? tempTransaction;
+
+    [Parameter]
+    public string? Id { get; set; }
+    [Parameter]
+    public string? Mode { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        int intId = Convert.ToInt32(Id);
+        transaction = await transactionService.GetTransactionTypeByIdAsync(intId);
+        tempTransaction = new TransactionType
+        {
+            Name = transaction!.Name,
+            Description = transaction!.Description
+        };
+    }
+}

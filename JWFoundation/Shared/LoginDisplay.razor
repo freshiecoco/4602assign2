@@ -1,0 +1,36 @@
+<AuthorizeView>   
+    <Authorized>
+    <div class="dropdown" @onmouseleave="CloseDropdown">
+    <span class="btn btn-outline-danger dropdown-toggle text-white" @onclick="ToggleDropdown">
+        Hello, @context.User.Identity?.Name!
+    </span>
+
+    <div class="@($"dropdown-menu {(isDropdownOpen ? "show" : "")}")" @onmouseleave="CloseDropdown">
+        <form method="post" action="Identity/Account/Logout">
+            <button type="submit" class="dropdown-item">Log out</button>
+        </form>
+    </div>
+    </div>
+
+    </Authorized>
+    <NotAuthorized>
+        <div>
+            <a href="Identity/Account/Register" class="btn btn-primary">Register</a>
+            <a href="Identity/Account/Login" class="btn btn-secondary">Log in</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    bool isDropdownOpen = false;
+
+    void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+    }
+
+    void CloseDropdown()
+    {
+        isDropdownOpen = false;
+    }
+}

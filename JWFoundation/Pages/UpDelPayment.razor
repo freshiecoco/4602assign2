@@ -1,0 +1,97 @@
+@page "/updelPayment/{id}/{mode}"
+@attribute [Authorize(Roles = "Admin")]
+@inject PaymentService paymentService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Update/Delete Payment</PageTitle>
+
+<div class="container">
+
+@if (tempPayment!= null && payment != null && Mode == "edit") {
+
+<div class="m-5 bg-light">
+    <small>Originally created by: <strong>@payment.Created.ToString("ddd, MMMM d, yyyy - h:mm tt")</strong> 
+     by <strong>@payment.CreatedBy</strong></small>
+</div>
+@if (payment.ModifiedBy != null)
+{
+    <div>
+    <small>Modified by: <strong>@payment.Modified.ToString("ddd, MMMM d, yyyy - h:mm tt")</strong> 
+    by <strong>@payment.ModifiedBy</strong></small>
+    </div>
+}
+<div>
+    <h2>Edit Infomation of Payment no. @Id</h2>
+    <EditForm Model="@tempPayment" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form-group py-2">
+            <ValidationMessage For="@(() => tempPayment.Name)" />
+            <label for="Name">Name:</label>
+            <InputText id="Name" class="form-control text-muted" @bind-Value="tempPayment.Name" />
+        </div>
+        <div class="py-2">
+            <button type="submit" class="btn btn-dark">Update</button>
+        </div>
+    </EditForm>
+
+    @code {
+        private async Task HandleValidSubmit()
+        {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authenticationState.User;
+            var username = user.Identity?.Name;
+
+            payment!.Name = tempPayment!.Name;
+
+            payment!.ModifiedBy = username?.ToString() ?? "Unknown";
+            await paymentService.UpdatePaymentMethodAsync(payment!.PaymentMethodId, payment);
+            NavManager.NavigateTo("/payments");
+        }
+    }
+</div>
+}
+else if (payment != null && Mode == "del")
+{ // Delete
+    <fieldset>
+        <legend>Payment Information</legend>
+        <p>Name: @payment.Name</p>
+    </fieldset>
+    <p>Payment with ID: @Id will be deleted</p>
+    <p>Are you sure?</p>
+    <button type="button" class="btn btn-danger" @onclick="HandleDeletePayment">Delete</button>
+    @code {
+    private async Task HandleDeletePayment()
+    {
+        await paymentService.DeletePaymentMethodAsync(payment!.PaymentMethodId);
+        NavManager.NavigateTo("/payments");
+    }
+}
+}
+else
+{
+    <p>Payment with ID: @Id not found</p>
+}
+</div>
+
+@code {
+    private PaymentMethod? payment = new PaymentMethod();
+    private PaymentMethod? tempPayment;
+
+    [Parameter]
+    public string? Id { get; set; }
+    [Parameter]
+    public string? Mode { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        int intId = Convert.ToInt32(Id);
+        payment = await paymentService.GetPaymentMethodByIdAsync(intId);
+        tempPayment = new PaymentMethod
+        {
+            Name = payment!.Name,
+        };
+    }
+
+}

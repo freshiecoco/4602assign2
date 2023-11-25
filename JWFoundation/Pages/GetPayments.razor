@@ -1,0 +1,49 @@
+@page "/payments"
+@attribute [Authorize(Roles = "Admin")]
+@inject PaymentService paymentService
+
+
+<div class="container"> 
+<div class="text-center d-flex align-items-center">
+  <h1 class="my-3">Payment Methods</h1>
+  <a class="btn btn-light mx-3" href="/addpayment">
+  <span class="oi oi-plus m-2"></span>
+  <strong>More</strong>
+  </a>
+</div>
+
+@if (paymentMethods == null) {
+  <p><em>Loading...</em></p>
+} else {
+  <table class='table table-striped'>
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Tools</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var item in paymentMethods)
+      {
+        <tr class="bg-light">
+          <td>@item.PaymentMethodId</td>
+          <td>@item.Name</td>
+          <td><a class="btn btn-dark btn-sm" href="/updelPayment/@item.PaymentMethodId/edit">Edit</a>
+              <a class="btn btn-light btn-sm mx-3" href="/updelPayment/@item.PaymentMethodId/del">Remove</a
+          </td>
+        </tr>
+        }
+    </tbody>
+  </table>
+}
+</div
+
+@code {
+  List<PaymentMethod>? paymentMethods;
+
+  protected override async Task OnInitializedAsync() {
+    paymentMethods = await paymentService.GetPaymentMethodsAsync();
+  }
+
+}

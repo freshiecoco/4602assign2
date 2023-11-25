@@ -1,0 +1,47 @@
+@page "/reports"
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager NavManager
+
+<PageTitle>Reports & Receipt</PageTitle>
+
+<div class="container mt-5">
+    <div class="row flex-column">
+        <div class="col-md-12 mb-3">
+            <div class="card border-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Annual Report</h5>
+                    <form>
+                        <div class="input-group">
+                            <label class="input-group-text" for="yearInput">Enter a year:</label>
+                            <input type="number" class="form-control" @bind="year" id="yearInput" placeholder="Enter year" />
+                        </div>
+                        @if (year == 0)
+                        {
+                            <p class="text-danger">Please enter a valid year (not 0).</p>
+                        }
+                        <button class="btn btn-outline-dark btn-sm mb-2 my-2" @onclick="GetAnnualReport">Get Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 mb-3">
+            <div class="card border-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Year-to-Day Report</h5>
+                    <a class="btn btn-outline-dark btn-sm" href="/yeartonowreport">Get Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int year;
+
+    private void GetAnnualReport()
+    {  
+        if(year != 0) {
+            NavManager.NavigateTo($"/report/{year}", true);
+        }
+    }
+}

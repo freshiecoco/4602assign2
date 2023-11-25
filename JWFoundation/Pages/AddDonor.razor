@@ -1,0 +1,73 @@
+@page "/adddonor"
+@attribute [Authorize(Roles = "Admin")]
+@inject DonorService donorService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+<PageTitle>Add Donor</PageTitle>
+<div class="container">
+<h1>New Donor</h1>
+
+<EditForm Model="@donor" OnValidSubmit="HandleValidSubmit">
+  <DataAnnotationsValidator />
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.FirstName)" />
+    <label for="FirstName">First Name:</label>
+    <InputText id="FirstName" class="form-control" @bind-Value="donor.FirstName" />
+  </div>
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.LastName)" />
+    <label for="LastName">Last Name:</label>
+    <InputText id="LastName" class="form-control" @bind-Value="donor.LastName" />
+  </div>
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.Email)" />
+    <label for="Email">Email:</label>
+    <InputText id="Email" class="form-control" @bind-Value="donor.Email" />
+  </div>
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.Street)" />
+    <label for="Street">Street:</label>
+    <InputText id="Street" class="form-control" @bind-Value="donor.Street" />
+  </div>
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.City)" />
+    <label for="City">City:</label>
+    <InputText id="City" class="form-control" @bind-Value="donor.City" />
+  </div>
+
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.PostalCode)" />
+    <label for="PostalCode">Postal Code:</label>
+    <InputText id="PostalCode" class="form-control" @bind-Value="donor.PostalCode" />
+  </div>
+  
+  <div class="form-group py-2">
+    <ValidationMessage For="@(() => donor.Country)" />
+    <label for="Country">Country:</label>
+    <InputText id="Country" class="form-control" @bind-Value="donor.Country" />
+  </div>
+
+  <button type="submit" class="btn btn-dark my-5">Submit</button>
+</EditForm>
+</div>
+@code {
+  private Donor donor = new Donor();
+
+  private async Task HandleValidSubmit() {
+    var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    var user = authenticationState.User;
+    var username = user.Identity?.Name;
+
+    donor!.CreatedBy = username?.ToString() ?? "Unknown";
+    donor!.Created = DateTime.Now;
+    await donorService.InsertDonorAsync(donor);
+    NavManager.NavigateTo("/donors");
+  }
+}

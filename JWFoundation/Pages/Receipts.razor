@@ -1,0 +1,52 @@
+@page "/receipts"
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager NavManager
+@inject DonorService donorService
+
+<PageTitle>Receipt</PageTitle>
+
+<div class="container mt-5">
+    <h5 class="card-title">Receipts</h5>
+    <form>
+        <div class="input-group mb-3">
+            <label class="input-group-text" for="donorSelect">Select a donor:</label>
+            <select class="form-select" @bind="donor" id="donorSelect">
+                @if (donors != null)
+                {
+                    @foreach (var donor in donors)
+                    {
+                        <option value="@donor.AccountNo">@donor.FirstName @donor.LastName</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="input-group">
+            <label class="input-group-text" for="yearInput">Enter a year:</label>
+            <input type="number" class="form-control" @bind="year" id="yearInput" placeholder="Enter year" />
+        </div>
+        @if (year == 0)
+        {
+            <p class="text-danger">Please enter a valid year (not 0).</p>
+        }
+        <button class="btn btn-outline-dark btn-sm mb-2 my-4" @onclick="GetReceipt">Get Receipt</button>
+    </form>
+</div>
+
+@code {
+    private int year;
+    private int donor;
+
+    List<Donor>? donors;
+
+    protected override async Task OnInitializedAsync() {
+        donors = await donorService.GetDonorsAsync();
+    }
+
+    private void GetReceipt()
+    {  
+        if(year != 0) {
+            NavManager.NavigateTo($"/receipt/{donor}/{year}", true);
+        }
+    }
+
+}

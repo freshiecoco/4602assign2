@@ -1,0 +1,72 @@
+@page "/donations"
+@attribute [Authorize(Roles = "Admin, Finance")]
+@inject DonationService donationService
+@inject DonorService donorService
+@inject PaymentService paymentService
+@inject TransactionService transactionService
+
+
+<div class="container"> 
+<div class="text-center d-flex align-items-center">
+  <h1 class="my-3">Donations</h1>
+  <a class="btn btn-light mx-3" href="/adddonation">
+  <span class="oi oi-plus m-2"></span>
+  <strong>More</strong>
+  </a>
+</div>
+
+@if (donations == null) {
+  <p><em>Loading...</em></p>
+} else {
+  <table class='table table-striped'>
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Donor</th>
+        <th>Transaction type</th>
+        <th>Payment method</th>
+        <th>Amount</th>
+        <th>Notes</th>
+        <th>Tools</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var item in donations)
+      {    
+        var donor = donorService.GetDonorByIdAsync(item.AccountNo).Result;
+        var transanctionType = transactionService.GetTransactionTypeByIdAsync(item.TransactionTypeId).Result;
+        var paymentMethod = paymentService.GetPaymentMethodByIdAsync(item.PaymentMethodId).Result;
+        <tr class="bg-light">
+          <td>@item.TransId</td>
+          <td>@item.Date.ToString("MMMM dd, yyyy")</td>
+          
+          @if(donor != null) {
+            <td>@donor.FirstName  @donor.LastName</td>
+          }
+          @if(transanctionType != null) {
+            <td>@transanctionType.Name</td>
+          }
+          @if(paymentMethod != null) {
+            <td>@paymentMethod.Name</td>
+          }
+          <td>$@item.Amount</td>
+          <td>@item.Notes</td>
+          <td><a class="btn btn-dark btn-sm" href="/updelDonation/@item.TransId/edit">Edit</a> <br>
+              <a class="btn btn-light btn-sm mt-2" href="/updelDonation/@item.TransId/del">Remove</a>
+          </td>
+        </tr>
+        }
+    </tbody>
+  </table>
+}
+
+</div>
+@code {
+  List<Donation>? donations;
+
+  protected override async Task OnInitializedAsync() {
+    donations = await donationService.GetDonationsAsync();
+  }
+
+}
